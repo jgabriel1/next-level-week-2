@@ -49,6 +49,7 @@ button,
 textarea {
     /* 1.6rem -> 60% larger than regular font size*/
     font: 500 1.6rem Poppins;
+    color: var(--color-text-base);
 }
 
 .container {
