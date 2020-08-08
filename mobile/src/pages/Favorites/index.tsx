@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useContext } from 'react'
 import { View, ScrollView } from 'react-native'
 import AsyncStorage from '@react-native-community/async-storage'
 import { useFocusEffect } from '@react-navigation/native'
@@ -7,23 +7,17 @@ import PageHeader from '../../components/PageHeader'
 import TeacherItem, { Teacher } from '../../components/TeacherItem'
 
 import styles from './styles'
+import favoritesContext from '../../store/favoritesContext'
 
 const Favorites = () => {
+    const { state } = useContext(favoritesContext)
     const [favorites, setFavorites] = useState<Teacher[]>([])
 
-    async function loadFavorites() {
-        await AsyncStorage.getItem('favorites').then(stored => {
-            if (stored) {
-                const favoritedTeachers: Teacher[] = JSON.parse(stored)
+    useFocusEffect(loadFavorites)
 
-                setFavorites(favoritedTeachers)
-            }
-        })
+    function loadFavorites() {
+        setFavorites(state.favorites)
     }
-
-    useFocusEffect(() => {
-        loadFavorites()
-    })
 
     return (
         <View style={styles.container}>

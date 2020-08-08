@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useContext, useMemo, useCallback } from 'react'
 import { View, Text, ScrollView } from 'react-native'
 import { TextInput, BorderlessButton, RectButton } from 'react-native-gesture-handler'
 import AsyncStorage from '@react-native-community/async-storage'
@@ -11,27 +11,50 @@ import PageHeader from '../../components/PageHeader'
 import TeacherItem, { Teacher } from '../../components/TeacherItem'
 
 import styles from './styles'
+import favoritesContext from '../../store/favoritesContext'
 
 const TeacherList = () => {
+    const { state, dispatch } = useContext(favoritesContext)
+
     const [teachers, setTeachers] = useState<Teacher[]>([])
-    const [favorites, setFavorites] = useState<number[]>([])
+    const [favorites, setFavorites] = useState<Set<number>>(new Set())
     const [isFiltersVisible, setIsFiltersVisible] = useState(false)
 
     const [subject, setSubject] = useState('')
     const [week_day, setWeekDay] = useState('')
     const [time, setTime] = useState('')
 
-    useFocusEffect(() => {
-        loadFavorites()
-    })
+    useEffect(loadFavorites, [])
 
-    async function loadFavorites() {
-        await AsyncStorage.getItem('favorites').then(stored => {
+    useFocusEffect(
+        useCallback(() => {
+            const favoritesIds = new Set<number>()
+
+            state.favorites.forEach(teacher => {
+                favoritesIds.add(teacher.id)
+            })
+
+            setFavorites(favoritesIds)
+        }, [state])
+    )
+
+    function loadFavorites() {
+        AsyncStorage.getItem('favorites').then(stored => {
             if (stored) {
                 const favoritedTeachers: Teacher[] = JSON.parse(stored)
-                const favoritedTeachersIds = favoritedTeachers.map(({ id }) => id)
 
-                setFavorites(favoritedTeachersIds)
+                dispatch({
+                    type: 'SET_ALL_FAVORITES',
+                    payload: favoritedTeachers,
+                })
+
+                const favoritesIds = new Set<number>()
+
+                state.favorites.forEach(teacher => {
+                    favoritesIds.add(teacher.id)
+                })
+
+                setFavorites(favoritesIds)
             }
         })
     }
@@ -41,12 +64,16 @@ const TeacherList = () => {
     }
 
     async function handleFiltersSubmit() {
-        await loadFavorites()
+        // const params = {
+        //     subject,
+        //     week_day,
+        //     time,
+        // }
 
         const params = {
-            subject,
-            week_day,
-            time,
+            subject: 'Matemática',
+            week_day: '1',
+            time: '11:00',
         }
 
         const response = await api.get('classes', { params })
@@ -123,7 +150,7 @@ const TeacherList = () => {
                         <TeacherItem
                             key={teacher.id}
                             teacher={teacher}
-                            isFavorite={favorites.includes(teacher.id)}
+                            isFavorite={favorites.has(teacher.id)}
                         />
                     ))
                 }

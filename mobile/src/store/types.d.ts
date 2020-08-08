@@ -7,8 +7,8 @@ export interface FavoritesState {
 }
 
 export interface Action {
-    type: 'SET_ALL_FAVORITES' | 'ADD_FAVORITE'
-    payload: Teacher | Array<Teacher>
+    type: 'SET_ALL_FAVORITES' | 'ADD_FAVORITE' | 'REMOVE_FAVORITE' | 'SYNC_DATA'
+    payload?: Array<Teacher> | Teacher | number
 }
 
 export interface FavoritesContext {
