@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useContext } from 'react'
 import { View, Text, Image, Linking } from 'react-native'
 import { RectButton } from 'react-native-gesture-handler'
 import AsyncStorage from '@react-native-community/async-storage'
@@ -9,6 +9,7 @@ import whatsappIcon from '../../assets/images/icons/whatsapp.png'
 
 import styles from './styles'
 import api from '../../services/api'
+import favoritesContext from '../../store/favoritesContext'
 
 export interface Teacher {
     id: number
@@ -35,6 +36,7 @@ const TeacherItem: React.FC<TeacherItemProps> = ({ teacher, isFavorite }) => {
         whatsapp
     } = teacher
 
+    const { dispatch } = useContext(favoritesContext)
     const [favorited, setFavorited] = useState(isFavorite)
 
     function handleLinkToWhatsapp() {
@@ -46,25 +48,23 @@ const TeacherItem: React.FC<TeacherItemProps> = ({ teacher, isFavorite }) => {
     }
 
     async function handleToggleFavorite() {
-        const favorites = await AsyncStorage.getItem('favorites')
-
-        const favoritesArray: Teacher[] = favorites ? JSON.parse(favorites) : []
-
         if (favorited) {
-            const favoriteIndex = favoritesArray.findIndex(item => {
-                return item.id === teacher.id
+            dispatch({
+                type: 'REMOVE_FAVORITE',
+                payload: teacher.id,
             })
-
-            favoritesArray.splice(favoriteIndex, 1)
 
             setFavorited(false)
         } else {
-            favoritesArray.push(teacher)
+            dispatch({
+                type: 'ADD_FAVORITE',
+                payload: teacher,
+            })
 
             setFavorited(true)
         }
 
-        await AsyncStorage.setItem('favorites', JSON.stringify(favoritesArray))
+        dispatch({ type: 'SYNC_DATA' })
     }
 
     return (
